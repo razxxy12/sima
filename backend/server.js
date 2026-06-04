@@ -93,11 +93,10 @@ async function autoSetupDatabase() {
   }
 }
 
-const PORT = process.env.PORT || 5000;
-setTimeout(() => {
-  autoSetupDatabase().then(() => {
-    app.listen(PORT, () => console.log(`🚀 Server berjalan di port ${PORT}`));
-  });
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`🚀 Server berjalan di port ${PORT}`);
+});
 }, 5000);T = process.env.PORT || 5000;
 setTimeout(() => {
   autoSetupDatabase().then(() => {
