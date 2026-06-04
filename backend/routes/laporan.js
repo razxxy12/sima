@@ -1,11 +1,16 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../middleware/auth');
-const { uploadLaporan } = require('../middleware/upload');
+const router = require('express').Router();
 const laporanController = require('../controllers/laporanController');
+const { authenticate }  = require('../middleware/auth');
+const { uploadLaporan } = require('../middleware/upload');
 
-router.post('/upload', auth, uploadLaporan.single('file'), laporanController.upload);
-router.get('/', auth, laporanController.getAll);
-router.put('/:id/status', auth, laporanController.updateStatus);
+router.get('/', authenticate, laporanController.getAll);
+
+// uploadLaporan sudah middleware siap pakai, TIDAK perlu .single() lagi
+router.post('/upload', authenticate, uploadLaporan, laporanController.upload);
+
+router.put('/:id/status', authenticate, (req, res, next) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Hanya admin' });
+  next();
+}, laporanController.updateStatus);
 
 module.exports = router;
