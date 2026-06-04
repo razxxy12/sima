@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { fileUrl } from '../utils/fileUrl';
 
 const Profile = () => {
   const { user, setUser }       = useAuth();
@@ -89,10 +90,10 @@ const Profile = () => {
       {/* ── Kartu Foto ───────────────────────────────────────────────── */}
       <div className="bg-white rounded-lg shadow p-6 text-center">
         <img
-          src={user?.foto ? `/${user.foto}` : 'https://via.placeholder.com/150'}
+          src={fileUrl(user?.foto) || 'https://placehold.co/150'}
           alt="foto profil"
-          className="w-28 h-28 sm:w-32 sm:h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-200"
-          onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150'; }}
+          className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-200"
+          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/150'; }}
         />
         <p className="font-semibold text-gray-800 mb-1">{profile.nama}</p>
         <p className="text-xs text-gray-500 mb-4 capitalize">{profile.role}</p>

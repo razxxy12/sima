@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext';
+import { fileUrl } from '../utils/fileUrl';
 
 const Topbar = () => {
   const { user } = useAuth();
@@ -16,9 +17,10 @@ const Topbar = () => {
       <div className="flex items-center gap-3 ml-auto">
         <span className="text-sm font-medium text-gray-700 hidden sm:block">{user?.nama}</span>
         <img
-          src={user?.foto ? `/${user.foto}` : 'https://via.placeholder.com/40'}
+          src={fileUrl(user?.foto) || 'https://placehold.co/40'}
           alt="avatar"
           className="w-8 h-8 rounded-full border border-gray-300 object-cover"
+          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/40'; }}
         />
       </div>
     </header>
