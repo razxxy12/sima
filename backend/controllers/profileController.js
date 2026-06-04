@@ -32,7 +32,12 @@ exports.updateProfile = async (req, res) => {
 exports.uploadFoto = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'File foto tidak ditemukan' });
-    const filePath = req.file.path.replace(/\\/g, '/');
+
+    // Simpan hanya path relatif dari root backend, pakai forward slash
+    const filePath = req.file.path
+      .replace(/\\/g, '/')           // Windows backslash → forward slash
+      .replace(/^.*uploads\//, 'uploads/'); // buang prefix absolut, simpan dari 'uploads/'
+
     await pool.query('UPDATE users SET foto = ? WHERE id = ?', [filePath, req.user.id]);
     res.json({ message: 'Foto berhasil diupload', foto: filePath });
   } catch (error) {
@@ -40,7 +45,6 @@ exports.uploadFoto = async (req, res) => {
     res.status(500).json({ message: 'Gagal upload foto' });
   }
 };
-
 exports.deleteFoto = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT foto FROM users WHERE id = ?', [req.user.id]);
