@@ -1,24 +1,48 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const path   = require('path');
+const fs     = require('fs');
+
+// Path absolut — tidak bergantung pada working directory
+const BASE_DIR = path.join(__dirname, '..', 'uploads');
 
 const ensureDir = (dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 };
 
-const storage = (folder) => multer.diskStorage({
+// Buat folder saat modul pertama kali di-load
+ensureDir(path.join(BASE_DIR, 'foto'));
+ensureDir(path.join(BASE_DIR, 'laporan'));
+
+const storageLaporan = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dest = path.join(__dirname, '..', 'uploads', folder);
+    const dest = path.join(BASE_DIR, 'laporan');
     ensureDir(dest);
     cb(null, dest);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
   }
 });
 
-const uploadFoto    = multer({ storage: storage('foto'),    limits: { fileSize: 5  * 1024 * 1024 } });
-const uploadLaporan = multer({ storage: storage('laporan'), limits: { fileSize: 20 * 1024 * 1024 } });
+const storageFoto = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dest = path.join(BASE_DIR, 'foto');
+    ensureDir(dest);
+    cb(null, dest);
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
+  }
+});
 
-module.exports = { uploadFoto, uploadLaporan };
+exports.uploadLaporan = multer({
+  storage: storageLaporan,
+  limits: { fileSize: 10 * 1024 * 1024 }
+}).single('file');
+
+exports.uploadFoto = multer({
+  storage: storageFoto,
+  limits: { fileSize: 2 * 1024 * 1024 }
+}).single('foto');
