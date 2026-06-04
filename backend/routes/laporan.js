@@ -1,11 +1,12 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const { uploadLaporan } = require('../middleware/upload'); // ← destructure
 const laporanController = require('../controllers/laporanController');
-const { authenticate } = require('../middleware/auth');
-const { uploadLaporan } = require('../middleware/upload');
-router.get('/', authenticate, laporanController.getAll);
-router.post('/upload', authenticate, uploadLaporan, laporanController.upload);
-router.put('/:id/status', authenticate, (req, res, next) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Hanya admin' });
-  next();
-}, laporanController.updateStatus);
+
+// uploadLaporan adalah objek multer, panggil .single() untuk dapat middleware-nya
+router.post('/upload', auth, uploadLaporan.single('file'), laporanController.uploadLaporan);
+router.get('/', auth, laporanController.getLaporan);
+router.put('/:id/status', auth, laporanController.updateStatus);
+
 module.exports = router;
