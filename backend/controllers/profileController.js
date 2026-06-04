@@ -5,13 +5,11 @@ const path = require('path');
 
 exports.getProfile = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT u.*, m.nim, m.prodi, m.angkatan, m.no_hp, m.status_magang, p.nama_perusahaan
-      FROM users u
-      LEFT JOIN mahasiswa m ON u.id = m.user_id
-      LEFT JOIN perusahaan p ON m.perusahaan_id = p.id
-      WHERE u.id = ?
-    `, [req.user.id]);
+    // Ambil data user saja (tanpa JOIN mahasiswa karena tabel mungkin tidak ada)
+    const [rows] = await pool.query(
+      'SELECT id, nama, email, role, foto, created_at FROM users WHERE id = ?',
+      [req.user.id]
+    );
     if (rows.length === 0) return res.status(404).json({ message: 'User tidak ditemukan' });
     res.json(rows[0]);
   } catch (error) {
@@ -22,12 +20,8 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { nama, no_hp, prodi, angkatan } = req.body;
-    await pool.query('UPDATE users SET nama=? WHERE id=?', [nama, req.user.id]);
-    if (req.user.role === 'mahasiswa') {
-      await pool.query('UPDATE mahasiswa SET no_hp=?, prodi=?, angkatan=? WHERE user_id=?',
-        [no_hp, prodi, angkatan, req.user.id]);
-    }
+    const { nama, no_hp } = req.body;
+    await pool.query('UPDATE users SET nama = ? WHERE id = ?', [nama, req.user.id]);
     res.json({ message: 'Profil diperbarui' });
   } catch (error) {
     console.error(error);
@@ -66,7 +60,8 @@ exports.deleteFoto = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-    if (!oldPassword || !newPassword) return res.status(400).json({ message: 'Password lama dan baru wajib diisi' });
+    if (!oldPassword || !newPassword)
+      return res.status(400).json({ message: 'Password lama dan baru wajib diisi' });
     const [rows] = await pool.query('SELECT password FROM users WHERE id = ?', [req.user.id]);
     const isMatch = await bcrypt.compare(oldPassword, rows[0].password);
     if (!isMatch) return res.status(400).json({ message: 'Password lama salah' });
