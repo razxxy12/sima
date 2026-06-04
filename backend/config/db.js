@@ -22,4 +22,10 @@ async function initDB() {
   }
 }
 
-module.exports = { pool, initDB };
+// Export pool sebagai default agar semua controller bisa langsung pakai
+// const pool = require('../config/db') → pool.query() ✅
+module.exports = pool;
+
+// Export initDB agar server.js bisa pakai
+// const { initDB } = require('../config/db') ✅
+module.exports.initDB = initDB;
