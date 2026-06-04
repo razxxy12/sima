@@ -1,51 +1,112 @@
-import { NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Tutup sidebar otomatis saat navigasi (mobile)
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
+  // Tutup sidebar saat klik di luar overlay
+  const handleOverlayClick = () => setIsOpen(false);
+
   const adminLinks = [
-    { to: '/', label: 'Dashboard', icon: 'dashboard' },
-    { to: '/mahasiswa', label: 'Mahasiswa', icon: 'group' },
-    { to: '/perusahaan', label: 'Perusahaan', icon: 'corporate_fare' },
-    { to: '/laporan', label: 'Laporan', icon: 'menu_book' },
-    { to: '/profile', label: 'Profil', icon: 'person' }
+    { to: '/',           label: 'Dashboard',   icon: 'dashboard' },
+    { to: '/mahasiswa',  label: 'Mahasiswa',   icon: 'group' },
+    { to: '/perusahaan', label: 'Perusahaan',  icon: 'corporate_fare' },
+    { to: '/laporan',    label: 'Laporan',     icon: 'menu_book' },
+    { to: '/profile',    label: 'Profil',      icon: 'person' },
   ];
   const mahasiswaLinks = [
-    { to: '/', label: 'Dashboard', icon: 'dashboard' },
+    { to: '/',        label: 'Dashboard',    icon: 'dashboard' },
     { to: '/laporan', label: 'Laporan Saya', icon: 'menu_book' },
-    { to: '/profile', label: 'Profil', icon: 'person' }
+    { to: '/profile', label: 'Profil',       icon: 'person' },
   ];
   const links = user?.role === 'admin' ? adminLinks : mahasiswaLinks;
 
   return (
-    <aside className="w-64 bg-gray-900 text-white flex flex-col flex-shrink-0">
-      <div className="p-5 border-b border-gray-700">
-        <h1 className="text-2xl font-bold tracking-tight">SIMA</h1>
-        <p className="text-xs text-gray-400 mt-1">Internship Management</p>
-      </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {links.map(link => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive ? 'bg-blue-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`
-            }
+    <>
+      {/* ── Tombol Hamburger (mobile only) ────────────────────────────── */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-gray-900 text-white p-2 rounded-lg shadow-lg"
+        aria-label="Buka menu"
+      >
+        <span className="material-symbols-outlined text-xl">menu</span>
+      </button>
+
+      {/* ── Overlay backdrop (mobile) ──────────────────────────────────── */}
+      {isOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={handleOverlayClick}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Sidebar Panel ─────────────────────────────────────────────── */}
+      <aside
+        className={`
+          fixed top-0 left-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-50
+          transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:relative md:translate-x-0 md:flex md:flex-shrink-0
+        `}
+      >
+        {/* Header sidebar */}
+        <div className="p-5 border-b border-gray-700 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">SIMA</h1>
+            <p className="text-xs text-gray-400 mt-1">Internship Management</p>
+          </div>
+          {/* Tombol tutup (mobile only) */}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="md:hidden text-gray-400 hover:text-white p-1 rounded"
+            aria-label="Tutup menu"
           >
-            <span className="material-symbols-outlined text-xl">{link.icon}</span>
-            <span>{link.label}</span>
-          </NavLink>
-        ))}
-      </nav>
-      <div className="p-3 border-t border-gray-700">
-        <button onClick={logout} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded-md">
-          <span className="material-symbols-outlined text-xl">logout</span>
-          Sign Out
-        </button>
-      </div>
-    </aside>
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        {/* Nav Links */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {links.map(link => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.to === '/'}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-blue-800 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`
+              }
+            >
+              <span className="material-symbols-outlined text-xl">{link.icon}</span>
+              <span>{link.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-3 border-t border-gray-700">
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+          >
+            <span className="material-symbols-outlined text-xl">logout</span>
+            Sign Out
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 
