@@ -1,10 +1,15 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const { uploadFoto } = require('../middleware/upload'); // ← destructure
 const profileController = require('../controllers/profileController');
-const { authenticate } = require('../middleware/auth');
-const { uploadFoto } = require('../middleware/upload');
-router.get('/', authenticate, profileController.getProfile);
-router.put('/', authenticate, profileController.updateProfile);
-router.post('/foto', authenticate, uploadFoto, profileController.uploadFoto);
-router.delete('/foto', authenticate, profileController.deleteFoto);
-router.put('/password', authenticate, profileController.changePassword);
+
+router.get('/', auth, profileController.getProfile);
+router.put('/', auth, profileController.updateProfile);
+router.put('/password', auth, profileController.changePassword);
+
+// uploadFoto adalah objek multer, panggil .single() untuk dapat middleware-nya
+router.post('/foto', auth, uploadFoto.single('foto'), profileController.uploadFoto);
+router.delete('/foto', auth, profileController.deleteFoto);
+
 module.exports = router;
