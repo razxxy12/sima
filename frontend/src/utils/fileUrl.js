@@ -1,5 +1,6 @@
 // Ambil base URL backend (tanpa /api di akhir)
 const BACKEND = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/api$/, '');
+console.log('BACKEND URL:', BACKEND); // hapus setelah debug
 
 export const fileUrl = (path) => {
   if (!path) return null;
