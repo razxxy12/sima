@@ -7,12 +7,10 @@ const Sidebar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Tutup sidebar otomatis saat navigasi (mobile)
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
 
-  // Tutup sidebar saat klik di luar overlay
   const handleOverlayClick = () => setIsOpen(false);
 
   const adminLinks = [
@@ -34,10 +32,14 @@ const Sidebar = () => {
       {/* ── Tombol Hamburger (mobile only) ────────────────────────────── */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-gray-900 text-white p-2 rounded-lg shadow-lg"
+        className="md:hidden fixed top-0 left-0 z-50 h-16 w-16 flex items-center justify-center text-gray-800 hover:bg-gray-100 transition-colors"
         aria-label="Buka menu"
       >
-        <span className="material-symbols-outlined text-xl">menu</span>
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect y="3"  width="22" height="2.2" rx="1.1" fill="currentColor"/>
+          <rect y="10" width="22" height="2.2" rx="1.1" fill="currentColor"/>
+          <rect y="17" width="22" height="2.2" rx="1.1" fill="currentColor"/>
+        </svg>
       </button>
 
       {/* ── Overlay backdrop (mobile) ──────────────────────────────────── */}
