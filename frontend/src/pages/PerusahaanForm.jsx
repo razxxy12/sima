@@ -9,7 +9,7 @@ const PerusahaanForm = () => {
 
   const [form, setForm] = useState({
     nama_perusahaan: '', alamat: '', kota: '',
-    bidang_usaha: '', email: '', telepon: '', pic: '',
+    bidang_usaha: '', email: '', telepon: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
@@ -25,7 +25,6 @@ const PerusahaanForm = () => {
           bidang_usaha:    p.bidang_usaha || '',
           email:           p.email        || '',
           telepon:         p.telepon      || '',
-          pic:             p.pic          || '',
         });
       }).catch(console.error);
     }
@@ -75,7 +74,6 @@ const PerusahaanForm = () => {
           <textarea name="alamat" value={form.alamat} onChange={handleChange} rows="2" className={textareaClass} />
         </div>
 
-        {/* Kota & Bidang: 2 kolom di sm, 1 di mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Kota</label>
@@ -87,7 +85,6 @@ const PerusahaanForm = () => {
           </div>
         </div>
 
-        {/* Email & Telepon: 2 kolom di sm, 1 di mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Email</label>
@@ -97,11 +94,6 @@ const PerusahaanForm = () => {
             <label className={labelClass}>Telepon</label>
             <input name="telepon" value={form.telepon} onChange={handleChange} className={inputClass} />
           </div>
-        </div>
-
-        <div>
-          <label className={labelClass}>PIC (Person in Charge)</label>
-          <input name="pic" value={form.pic} onChange={handleChange} className={inputClass} />
         </div>
 
         <div className="flex flex-wrap gap-3 pt-2">
