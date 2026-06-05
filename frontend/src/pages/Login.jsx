@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 const Login = () => {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
   const { login }               = useAuth();
@@ -25,80 +26,123 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200 px-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
-        <div className="p-6 sm:p-8">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-blue-800">SIMA</h1>
-            <p className="text-sm text-gray-500 mt-1">Sistem Informasi Manajemen Magang</p>
-          </div>
+    <div className="min-h-screen flex flex-col bg-bg-deep text-on-background">
+      {/* Ambient background glow */}
+      <div className="ambient-glow-bg" />
 
+      {/* TopAppBar */}
+      <header className="fixed top-0 w-full z-50 bg-glass-fill backdrop-blur-lg border-b border-glass-stroke flex justify-between items-center h-16 px-4 shadow-[0_8px_32px_0_rgba(0,112,243,0.1)]">
+        <div className="w-11 h-11" />
+        <span className="text-headline-md font-bold text-primary tracking-tighter">SIMA</span>
+        <div className="w-11 h-11" />
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-16 pb-24">
+        {/* Logo */}
+        <div className="text-center mb-10 space-y-2">
+          <h1 className="text-headline-xl font-bold text-primary tracking-tight">SIMA</h1>
+          <p className="text-body-md text-on-surface-variant max-w-xs mx-auto">
+            Sistem Informasi Manajemen Magang
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="glass-card w-full max-w-sm rounded-2xl p-8 space-y-8">
           {/* Error */}
           {error && (
-            <div className="bg-red-50 text-red-700 border border-red-200 p-3 rounded-lg mb-4 text-sm">
+            <div className="bg-error-container/30 text-error border border-error/30 p-3 rounded-xl text-label-md">
               {error}
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
-                  person
-                </span>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email */}
+            <div className="relative">
+              <div className="flex items-center gap-3 bg-surface-container-low border border-glass-stroke rounded-xl px-4 h-14 transition-all duration-300 focus-within:border-electric-blue focus-within:ring-2 focus-within:ring-electric-blue/20">
+                <span className="material-symbols-outlined text-outline">mail</span>
                 <input
                   type="email"
+                  id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                  placeholder="mahasiswa@sima.ac.id"
+                  placeholder=" "
+                  className="bg-transparent border-none outline-none ring-0 w-full text-on-surface text-body-md p-0 focus:ring-0 peer"
                 />
+                <label
+                  htmlFor="email"
+                  className="absolute left-11 top-4 text-body-md text-outline pointer-events-none transition-all duration-200 peer-focus:-translate-y-6 peer-focus:scale-85 peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-6 peer-[:not(:placeholder-shown)]:scale-85 peer-[:not(:placeholder-shown)]:text-outline"
+                >
+                  Email
+                </label>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
-                  lock
-                </span>
+            {/* Password */}
+            <div className="relative">
+              <div className="flex items-center gap-3 bg-surface-container-low border border-glass-stroke rounded-xl px-4 h-14 transition-all duration-300 focus-within:border-electric-blue focus-within:ring-2 focus-within:ring-electric-blue/20">
+                <span className="material-symbols-outlined text-outline">lock</span>
                 <input
-                  type="password"
+                  type={showPass ? 'text' : 'password'}
+                  id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                  placeholder="••••••••"
+                  placeholder=" "
+                  className="bg-transparent border-none outline-none ring-0 w-full text-on-surface text-body-md p-0 focus:ring-0 peer"
                 />
+                <label
+                  htmlFor="password"
+                  className="absolute left-11 top-4 text-body-md text-outline pointer-events-none transition-all duration-200 peer-focus:-translate-y-6 peer-focus:scale-85 peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-6 peer-[:not(:placeholder-shown)]:scale-85 peer-[:not(:placeholder-shown)]:text-outline"
+                >
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="text-outline hover:text-primary transition-colors"
+                >
+                  <span className="material-symbols-outlined">
+                    {showPass ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
               </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-800 hover:bg-blue-900 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full h-14 electric-gradient rounded-xl text-label-md font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(0,112,243,0.3)] hover:shadow-[0_0_30px_rgba(0,112,243,0.5)] disabled:opacity-60"
             >
               {loading ? 'Masuk...' : (
                 <>
-                  Login
-                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                  <span>Login</span>
+                  <span className="material-symbols-outlined text-xl">arrow_forward</span>
                 </>
               )}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Belum punya akun?{' '}
-            <Link to="/register" className="text-blue-700 hover:underline font-medium">
-              Daftar sebagai Mahasiswa
-            </Link>
-          </p>
+          {/* Register link */}
+          <div className="text-center">
+            <p className="text-body-md text-on-surface-variant">
+              Belum punya akun?{' '}
+              <Link to="/register" className="text-primary font-bold hover:underline underline-offset-4 transition-all">
+                Daftar sebagai Mahasiswa
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+
+        {/* Decorative */}
+        <div className="mt-12 opacity-30 flex gap-4">
+          <div className="w-12 h-1 bg-electric-blue rounded-full" />
+          <div className="w-12 h-1 bg-glass-stroke rounded-full" />
+          <div className="w-12 h-1 bg-glass-stroke rounded-full" />
+        </div>
+      </main>
     </div>
   );
 };
