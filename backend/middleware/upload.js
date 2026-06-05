@@ -35,6 +35,28 @@ const storageFoto = multer.diskStorage({
   }
 });
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const folder = file.mimetype.startsWith('image/') ? 'uploads/foto' : 'uploads/laporan';
+    cb(null, folder);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024  // 10 MB — naikkan sesuai kebutuhan
+  },
+  fileFilter: (req, file, cb) => {
+    cb(null, true);
+  }
+});
+
+module.exports = upload;
+
 // Export middleware SIAP PAKAI (sudah .single() di sini)
 exports.uploadLaporan = multer({ storage: storageLaporan, limits: { fileSize: 10 * 1024 * 1024 } }).single('file');
 exports.uploadFoto    = multer({ storage: storageFoto,    limits: { fileSize: 2  * 1024 * 1024 } }).single('foto');
