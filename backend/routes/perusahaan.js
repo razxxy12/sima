@@ -1,9 +1,12 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const perusahaanController = require('../controllers/perusahaanController');
-const { authenticate, authorize } = require('../middleware/auth');
-router.get('/', authenticate, authorize('admin'), perusahaanController.getAll);
-router.get('/:id', authenticate, authorize('admin'), perusahaanController.getById);
-router.post('/', authenticate, authorize('admin'), perusahaanController.create);
-router.put('/:id', authenticate, authorize('admin'), perusahaanController.update);
-router.delete('/:id', authenticate, authorize('admin'), perusahaanController.remove);
+const { authenticate: auth } = require('../middleware/auth');
+
+router.get('/', auth, perusahaanController.getAll);
+router.get('/:id', auth, perusahaanController.getById);
+router.post('/', auth, perusahaanController.create);
+router.put('/:id', auth, perusahaanController.update);
+router.delete('/:id', auth, perusahaanController.remove);
+
 module.exports = router;

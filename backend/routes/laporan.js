@@ -3,9 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const upload = require('../middleware/upload');
 const laporanController = require('../controllers/laporanController');
-const auth = require('../middleware/auth');
+const { authenticate: auth } = require('../middleware/auth');
 
-// Helper wrapper untuk tangkap error Multer
 const uploadMiddleware = (req, res, next) => {
   upload.single('file')(req, res, (err) => {
     if (err instanceof multer.MulterError) {

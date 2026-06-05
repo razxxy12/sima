@@ -1,9 +1,12 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const mahasiswaController = require('../controllers/mahasiswaController');
-const { authenticate, authorize } = require('../middleware/auth');
-router.get('/', authenticate, authorize('admin'), mahasiswaController.getAll);
-router.get('/:id', authenticate, authorize('admin'), mahasiswaController.getById);
-router.post('/', authenticate, authorize('admin'), mahasiswaController.create);
-router.put('/:id', authenticate, authorize('admin'), mahasiswaController.update);
-router.delete('/:id', authenticate, authorize('admin'), mahasiswaController.remove);
+const { authenticate: auth } = require('../middleware/auth');
+
+router.get('/', auth, mahasiswaController.getAll);
+router.get('/:id', auth, mahasiswaController.getById);
+router.post('/', auth, mahasiswaController.create);
+router.put('/:id', auth, mahasiswaController.update);
+router.delete('/:id', auth, mahasiswaController.remove);
+
 module.exports = router;
