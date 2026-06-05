@@ -9,16 +9,24 @@ const Sidebar = () => {
 
   useEffect(() => {
     setIsOpen(false);
+    document.body.classList.remove('sidebar-open');
   }, [location.pathname]);
 
-  const handleOverlayClick = () => setIsOpen(false);
+  const openSidebar = () => {
+    setIsOpen(true);
+    document.body.classList.add('sidebar-open');
+  };
+  const closeSidebar = () => {
+    setIsOpen(false);
+    document.body.classList.remove('sidebar-open');
+  };
 
   const adminLinks = [
-    { to: '/',           label: 'Dashboard',   icon: 'dashboard' },
-    { to: '/mahasiswa',  label: 'Mahasiswa',   icon: 'group' },
-    { to: '/perusahaan', label: 'Perusahaan',  icon: 'corporate_fare' },
-    { to: '/laporan',    label: 'Laporan',     icon: 'menu_book' },
-    { to: '/profile',    label: 'Profil',      icon: 'person' },
+    { to: '/',           label: 'Dashboard',  icon: 'dashboard' },
+    { to: '/mahasiswa',  label: 'Mahasiswa',  icon: 'group' },
+    { to: '/perusahaan', label: 'Perusahaan', icon: 'corporate_fare' },
+    { to: '/laporan',    label: 'Laporan',    icon: 'menu_book' },
+    { to: '/profile',    label: 'Profil',     icon: 'person' },
   ];
   const mahasiswaLinks = [
     { to: '/',        label: 'Dashboard',    icon: 'dashboard' },
@@ -29,47 +37,43 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* ── Tombol Hamburger (mobile only) ────────────────────────────── */}
+      {/* Hamburger button — mobile only */}
       <button
-        onClick={() => setIsOpen(true)}
-        className="md:hidden fixed top-0 left-0 z-50 h-16 w-16 flex items-center justify-center text-gray-800 hover:bg-gray-100 transition-colors"
+        onClick={openSidebar}
+        className="md:hidden fixed top-0 left-0 z-50 h-16 w-16 flex items-center justify-center text-primary hover:bg-white/5 transition-colors"
         aria-label="Buka menu"
       >
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect y="3"  width="22" height="2.2" rx="1.1" fill="currentColor"/>
-          <rect y="10" width="22" height="2.2" rx="1.1" fill="currentColor"/>
-          <rect y="17" width="22" height="2.2" rx="1.1" fill="currentColor"/>
-        </svg>
+        <span className="material-symbols-outlined">menu</span>
       </button>
 
-      {/* ── Overlay backdrop (mobile) ──────────────────────────────────── */}
+      {/* Overlay */}
       {isOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={handleOverlayClick}
+          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+          onClick={closeSidebar}
           aria-hidden="true"
         />
       )}
 
-      {/* ── Sidebar Panel ─────────────────────────────────────────────── */}
+      {/* Sidebar Panel */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-50
+          fixed top-0 left-0 h-screen w-64 flex flex-col z-50
           transition-transform duration-300 ease-in-out
+          glass-card border-r border-glass-stroke rounded-none
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:relative md:translate-x-0 md:flex md:flex-shrink-0
         `}
       >
-        {/* Header sidebar */}
-        <div className="p-5 border-b border-gray-700 flex items-center justify-between">
+        {/* Header */}
+        <div className="p-5 border-b border-glass-stroke flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">SIMA</h1>
-            <p className="text-xs text-gray-400 mt-1">Internship Management</p>
+            <h1 className="text-headline-md font-bold text-electric-blue tracking-tighter">SIMA</h1>
+            <p className="text-label-sm text-on-surface-variant mt-0.5">Internship Management</p>
           </div>
-          {/* Tombol tutup (mobile only) */}
           <button
-            onClick={() => setIsOpen(false)}
-            className="md:hidden text-gray-400 hover:text-white p-1 rounded"
+            onClick={closeSidebar}
+            className="md:hidden text-outline hover:text-primary p-1 rounded-lg transition-colors"
             aria-label="Tutup menu"
           >
             <span className="material-symbols-outlined">close</span>
@@ -84,24 +88,31 @@ const Sidebar = () => {
               to={link.to}
               end={link.to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-label-md font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-blue-800 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/20'
+                    : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'
                 }`
               }
             >
-              <span className="material-symbols-outlined text-xl">{link.icon}</span>
-              <span>{link.label}</span>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-electric-blue rounded-r-full" />
+                  )}
+                  <span className="material-symbols-outlined text-xl">{link.icon}</span>
+                  <span>{link.label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* Logout */}
-        <div className="p-3 border-t border-gray-700">
+        <div className="p-3 border-t border-glass-stroke">
           <button
             onClick={logout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            className="flex items-center gap-2 w-full px-3 py-2.5 text-label-md text-on-surface-variant hover:text-error hover:bg-error/5 rounded-xl transition-all duration-200"
           >
             <span className="material-symbols-outlined text-xl">logout</span>
             Sign Out
