@@ -3,7 +3,9 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
 const Layout = () => (
-  <div className="flex h-screen overflow-hidden bg-gray-100">
+  <div className="flex h-screen overflow-hidden bg-bg-deep">
+    {/* Ambient glow */}
+    <div className="ambient-glow-bg" />
     <Sidebar />
     <div className="flex-1 flex flex-col overflow-hidden min-w-0">
       <Topbar />
