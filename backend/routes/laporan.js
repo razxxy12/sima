@@ -1,15 +1,12 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const upload = require('../middleware/upload');
 const laporanController = require('../controllers/laporanController');
-const { authenticate }  = require('../middleware/auth');
-const { uploadLaporan } = require('../middleware/upload');
+const auth = require('../middleware/auth');
 
-router.get('/', authenticate, laporanController.getAll);
-
-// uploadLaporan sudah middleware siap pakai, TIDAK perlu .single() lagi
-router.post('/upload', authenticate, uploadLaporan, laporanController.upload);
-
-// Contoh di route laporan
-router.post('/upload', (req, res, next) => {
+// Helper wrapper untuk tangkap error Multer
+const uploadMiddleware = (req, res, next) => {
   upload.single('file')(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
@@ -20,11 +17,10 @@ router.post('/upload', (req, res, next) => {
     if (err) return res.status(500).json({ message: 'Upload gagal' });
     next();
   });
-}, laporanController.upload);
+};
 
-router.put('/:id/status', authenticate, (req, res, next) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Hanya admin' });
-  next();
-}, laporanController.updateStatus);
+router.get('/', auth, laporanController.getAll);
+router.post('/upload', auth, uploadMiddleware, laporanController.upload);
+router.put('/:id/status', auth, laporanController.updateStatus);
 
 module.exports = router;
