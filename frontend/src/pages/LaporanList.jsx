@@ -8,10 +8,14 @@ const STATUS_CLASS = {
   Rejected: 'bg-red-100 text-red-800',
 };
 
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 const LaporanList = () => {
   const [laporan, setLaporan]     = useState([]);
   const [judul, setJudul]         = useState('');
   const [uploading, setUploading] = useState(false);
+  const [fileError, setFileError] = useState('');
   const { user }                  = useAuth();
   const fileRef                   = useRef(null);
 
@@ -26,10 +30,22 @@ const LaporanList = () => {
 
   useEffect(() => { fetchLaporan(); }, []);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return setFileError('');
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setFileError(`Ukuran file maksimal ${MAX_FILE_SIZE_MB} MB. File kamu: ${(file.size / 1024 / 1024).toFixed(1)} MB`);
+      e.target.value = '';
+    } else {
+      setFileError('');
+    }
+  };
+
   const handleUpload = async (e) => {
     e.preventDefault();
     const file = fileRef.current?.files[0];
     if (!file || !judul) return alert('Judul dan file wajib diisi');
+    if (file.size > MAX_FILE_SIZE_BYTES) return alert(`Ukuran file maksimal ${MAX_FILE_SIZE_MB} MB`);
     const formData = new FormData();
     formData.append('judul', judul);
     formData.append('file', file);
@@ -40,6 +56,7 @@ const LaporanList = () => {
       });
       alert('Laporan berhasil diunggah');
       setJudul('');
+      setFileError('');
       if (fileRef.current) fileRef.current.value = '';
       fetchLaporan();
     } catch (err) {
@@ -81,18 +98,30 @@ const LaporanList = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">File (PDF / DOCX)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                File (PDF / DOCX)
+                <span className="ml-2 text-xs font-normal text-gray-400">Maks. {MAX_FILE_SIZE_MB} MB</span>
+              </label>
               <input
                 type="file"
                 accept=".pdf,.docx"
                 ref={fileRef}
                 required
+                onChange={handleFileChange}
                 className="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-800 hover:file:bg-blue-100"
               />
+              {fileError ? (
+                <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">error</span>
+                  {fileError}
+                </p>
+              ) : (
+                <p className="mt-1.5 text-xs text-gray-400">Format yang didukung: PDF, DOCX · Maksimal {MAX_FILE_SIZE_MB} MB</p>
+              )}
             </div>
             <button
               type="submit"
-              disabled={uploading}
+              disabled={uploading || !!fileError}
               className="w-full sm:w-auto bg-blue-800 text-white px-6 py-2.5 rounded-lg hover:bg-blue-900 disabled:opacity-60 text-sm font-medium"
             >
               {uploading ? 'Mengunggah...' : 'Upload Laporan'}
@@ -107,7 +136,6 @@ const LaporanList = () => {
           <h3 className="font-semibold text-gray-800">Daftar Laporan</h3>
         </div>
 
-        {/* Wrapper scroll horizontal */}
         <div className="w-full overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
