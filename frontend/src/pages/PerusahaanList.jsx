@@ -27,7 +27,7 @@ const PerusahaanList = () => {
       try {
         await api.delete(`/perusahaan/${id}`);
         fetchData();
-      } catch (err) {
+      } catch {
         alert('Gagal menghapus');
       }
     }
@@ -44,13 +44,13 @@ const PerusahaanList = () => {
         <div className="flex items-center gap-3">
           <Link
             to={`/perusahaan/edit/${row.id}`}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-electric-blue hover:text-primary text-label-md font-medium transition-colors"
           >
             Edit
           </Link>
           <button
             onClick={() => handleDelete(row.id)}
-            className="text-red-600 hover:text-red-800 text-sm font-medium"
+            className="text-error hover:text-red-300 text-label-md font-medium transition-colors"
           >
             Hapus
           </button>
@@ -60,32 +60,42 @@ const PerusahaanList = () => {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-800">Data Perusahaan</h2>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h2 className="text-headline-lg-mobile md:text-headline-lg font-semibold text-on-surface">
+            Data Perusahaan
+          </h2>
+          <p className="text-body-md text-on-surface-variant mt-1">
+            Kelola daftar perusahaan mitra magang.
+          </p>
+        </div>
         <Link
           to="/perusahaan/tambah"
-          className="inline-flex items-center justify-center gap-1 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition text-sm font-medium"
+          className="inline-flex items-center justify-center gap-2 electric-gradient text-white px-5 py-2.5 rounded-xl text-label-md font-semibold active:scale-95 transition-all shadow-[0_0_20px_rgba(0,112,243,0.3)] hover:shadow-[0_0_30px_rgba(0,112,243,0.5)]"
         >
-          + Tambah Perusahaan
+          <span className="material-symbols-outlined text-lg">add_business</span>
+          Tambah Perusahaan
         </Link>
       </div>
 
       {/* Search */}
-      <div className="mb-4">
+      <div className="relative w-full sm:w-80">
+        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
         <input
+          type="text"
           placeholder="Cari nama perusahaan..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="w-full sm:w-72 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full bg-glass-fill border border-glass-stroke rounded-xl py-3 pl-12 pr-4 text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-electric-blue/50 transition-all text-body-md backdrop-blur-xl"
         />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="glass-card rounded-xl overflow-hidden">
         <DataTable columns={columns} data={data} />
-        <div className="px-4 md:px-6 py-3 border-t">
+        <div className="px-4 md:px-6 py-3 border-t border-glass-stroke">
           <Pagination current={page} total={totalPages} onChange={setPage} />
         </div>
       </div>

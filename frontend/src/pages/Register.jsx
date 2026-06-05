@@ -3,9 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 
 const Register = () => {
-  const [form, setForm] = useState({ nama: '', email: '', password: '', nim: '', prodi: '', angkatan: '' });
-  const [error, setError] = useState('');
+  const [form, setForm]     = useState({ nama: '', email: '', password: '', nim: '', prodi: '', angkatan: '' });
+  const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -14,58 +15,154 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setLoading(true);
     try {
       await api.post('/auth/register', form);
-      setSuccess('Registrasi berhasil! Mengalihkan ke login...');
+      setSuccess('Registrasi berhasil! Mengalihkan ke halaman login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Registrasi gagal');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const inputClass =
+    'w-full bg-surface-container-low border border-glass-stroke rounded-xl px-4 py-3 text-on-surface text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-electric-blue/50 focus:border-electric-blue transition-all';
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
-        <div className="p-8">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-primary">SIMA</h1>
-            <p className="text-sm text-gray-500 mt-1">Daftar sebagai Mahasiswa</p>
-          </div>
-          {error && <div className="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm">{error}</div>}
-          {success && <div className="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{success}</div>}
+    <div className="min-h-screen flex flex-col bg-bg-deep text-on-background">
+      {/* Ambient glow */}
+      <div className="ambient-glow-bg" />
+
+      {/* TopAppBar */}
+      <header className="fixed top-0 w-full z-50 bg-glass-fill backdrop-blur-lg border-b border-glass-stroke flex justify-between items-center h-16 px-4 shadow-[0_8px_32px_0_rgba(0,112,243,0.1)]">
+        <div className="w-11 h-11" />
+        <span className="text-headline-md font-bold text-primary tracking-tighter">SIMA</span>
+        <div className="w-11 h-11" />
+      </header>
+
+      {/* Main */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-12">
+        <div className="text-center mb-8 space-y-1">
+          <h1 className="text-headline-lg font-bold text-on-surface tracking-tight">Buat Akun</h1>
+          <p className="text-body-md text-on-surface-variant">Daftar sebagai mahasiswa magang</p>
+        </div>
+
+        <div className="glass-card w-full max-w-md rounded-2xl p-8 space-y-6">
+          {error && (
+            <div className="bg-error-container/30 text-error border border-error/30 p-3 rounded-xl text-label-md flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg flex-shrink-0">error</span>
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-500/10 text-green-400 border border-green-500/20 p-3 rounded-xl text-label-md flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg flex-shrink-0">check_circle</span>
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-              <input name="nama" value={form.nama} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+              <label className="block text-label-md text-on-surface-variant mb-1.5">Nama Lengkap</label>
+              <input
+                name="nama"
+                value={form.nama}
+                onChange={handleChange}
+                required
+                placeholder="Nama lengkap kamu"
+                className={inputClass}
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" name="email" value={form.email} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+              <label className="block text-label-md text-on-surface-variant mb-1.5">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                placeholder="email@contoh.com"
+                className={inputClass}
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input type="password" name="password" value={form.password} onChange={handleChange} required minLength={6} className="w-full border rounded px-3 py-2" />
+              <label className="block text-label-md text-on-surface-variant mb-1.5">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                minLength={6}
+                placeholder="Minimal 6 karakter"
+                className={inputClass}
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">NIM</label>
-              <input name="nim" value={form.nim} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+              <label className="block text-label-md text-on-surface-variant mb-1.5">NIM</label>
+              <input
+                name="nim"
+                value={form.nim}
+                onChange={handleChange}
+                required
+                placeholder="Nomor Induk Mahasiswa"
+                className={inputClass}
+              />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Prodi</label>
-              <input name="prodi" value={form.prodi} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-label-md text-on-surface-variant mb-1.5">Prodi</label>
+                <input
+                  name="prodi"
+                  value={form.prodi}
+                  onChange={handleChange}
+                  placeholder="Teknik Informatika"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-label-md text-on-surface-variant mb-1.5">Angkatan</label>
+                <input
+                  name="angkatan"
+                  type="number"
+                  value={form.angkatan}
+                  onChange={handleChange}
+                  placeholder="2022"
+                  className={inputClass}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Angkatan</label>
-              <input name="angkatan" type="number" value={form.angkatan} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
-            <button type="submit" className="w-full bg-blue-800 hover:bg-blue-900 text-white font-medium py-2.5 rounded-lg transition-colors">Daftar</button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-14 electric-gradient rounded-xl text-label-md font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(0,112,243,0.3)] hover:shadow-[0_0_30px_rgba(0,112,243,0.5)] disabled:opacity-60 mt-2"
+            >
+              {loading ? 'Mendaftar...' : (
+                <>
+                  <span>Daftar Sekarang</span>
+                  <span className="material-symbols-outlined text-xl">person_add</span>
+                </>
+              )}
+            </button>
           </form>
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Sudah punya akun?{' '}
-            <Link to="/login" className="text-blue-700 hover:underline font-medium">Login di sini</Link>
-          </p>
+
+          <div className="text-center">
+            <p className="text-body-md text-on-surface-variant">
+              Sudah punya akun?{' '}
+              <Link to="/login" className="text-primary font-bold hover:underline underline-offset-4 transition-all">
+                Login di sini
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -3,11 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 
 const MahasiswaForm = () => {
-  const { id }    = useParams();
-  const isEdit    = Boolean(id);
-  const navigate  = useNavigate();
+  const { id }   = useParams();
+  const isEdit   = Boolean(id);
+  const navigate = useNavigate();
 
-  const [form, setForm]     = useState({
+  const [form, setForm]       = useState({
     nim: '', nama: '', email: '', prodi: '',
     angkatan: new Date().getFullYear(), no_hp: '', status_magang: 'Pending',
   });
@@ -27,7 +27,7 @@ const MahasiswaForm = () => {
     }
   }, [id, isEdit]);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange  = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,88 +38,108 @@ const MahasiswaForm = () => {
       else        await api.post('/mahasiswa', form);
       navigate('/mahasiswa');
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal menyimpan');
+      setError(err.response?.data?.message || 'Gagal menyimpan data');
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass  = 'w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none';
-  const labelClass  = 'block text-sm font-medium text-gray-700 mb-1';
+  const inputClass  = 'w-full bg-surface-container-low border border-glass-stroke rounded-xl px-4 py-3 text-on-surface text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-electric-blue/50 focus:border-electric-blue transition-all';
+  const labelClass  = 'block text-label-md text-on-surface-variant mb-1.5';
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <h2 className="text-xl md:text-2xl font-bold mb-6">
-        {isEdit ? 'Edit Mahasiswa' : 'Tambah Mahasiswa'}
-      </h2>
+    <div className="w-full max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <button
+          onClick={() => navigate('/mahasiswa')}
+          className="flex items-center gap-1 text-label-md text-on-surface-variant hover:text-on-surface transition-colors mb-4"
+        >
+          <span className="material-symbols-outlined text-lg">arrow_back</span>
+          Kembali
+        </button>
+        <h2 className="text-headline-lg-mobile md:text-headline-lg font-semibold text-on-surface">
+          {isEdit ? 'Edit Mahasiswa' : 'Tambah Mahasiswa'}
+        </h2>
+        <p className="text-body-md text-on-surface-variant mt-1">
+          {isEdit ? 'Perbarui data mahasiswa yang sudah ada.' : 'Isi form berikut untuk mendaftarkan mahasiswa baru.'}
+        </p>
+      </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm">
+        <div className="bg-error-container/30 text-error border border-error/30 p-3 rounded-xl text-label-md flex items-center gap-2">
+          <span className="material-symbols-outlined text-lg flex-shrink-0">error</span>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-4 md:p-6 rounded-lg shadow space-y-4">
-        <div>
-          <label className={labelClass}>NIM</label>
-          <input name="nim" value={form.nim} onChange={handleChange} required className={inputClass} />
-        </div>
-
-        <div>
-          <label className={labelClass}>Nama Lengkap</label>
-          <input name="nama" value={form.nama} onChange={handleChange} required className={inputClass} />
-        </div>
-
-        <div>
-          <label className={labelClass}>Email</label>
-          <input type="email" name="email" value={form.email} onChange={handleChange} required className={inputClass} />
-        </div>
-
-        {/* Prodi & Angkatan: 2 kolom di sm, 1 di mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="glass-card rounded-xl p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className={labelClass}>Prodi</label>
-            <input name="prodi" value={form.prodi} onChange={handleChange} className={inputClass} />
+            <label className={labelClass}>NIM</label>
+            <input name="nim" value={form.nim} onChange={handleChange} required placeholder="Nomor Induk Mahasiswa" className={inputClass} />
           </div>
+
           <div>
-            <label className={labelClass}>Angkatan</label>
-            <input type="number" name="angkatan" value={form.angkatan} onChange={handleChange} className={inputClass} />
+            <label className={labelClass}>Nama Lengkap</label>
+            <input name="nama" value={form.nama} onChange={handleChange} required placeholder="Nama lengkap mahasiswa" className={inputClass} />
           </div>
-        </div>
 
-        <div>
-          <label className={labelClass}>No HP</label>
-          <input name="no_hp" value={form.no_hp} onChange={handleChange} className={inputClass} />
-        </div>
+          <div>
+            <label className={labelClass}>Email</label>
+            <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="email@contoh.com" className={inputClass} />
+          </div>
 
-        <div>
-          <label className={labelClass}>Status Magang</label>
-          <select name="status_magang" value={form.status_magang} onChange={handleChange} className={inputClass}>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Aktif">Aktif</option>
-            <option value="Selesai">Selesai</option>
-          </select>
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Prodi</label>
+              <input name="prodi" value={form.prodi} onChange={handleChange} placeholder="Teknik Informatika" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Angkatan</label>
+              <input type="number" name="angkatan" value={form.angkatan} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
 
-        <div className="flex flex-wrap gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 sm:flex-none bg-blue-800 text-white px-6 py-2.5 rounded-lg hover:bg-blue-900 transition disabled:opacity-60 text-sm font-medium"
-          >
-            {loading ? 'Menyimpan...' : 'Simpan'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/mahasiswa')}
-            className="flex-1 sm:flex-none border border-gray-300 px-6 py-2.5 rounded-lg hover:bg-gray-100 text-sm font-medium"
-          >
-            Batal
-          </button>
-        </div>
-      </form>
+          <div>
+            <label className={labelClass}>No HP</label>
+            <input name="no_hp" value={form.no_hp} onChange={handleChange} placeholder="08xxxxxxxxxx" className={inputClass} />
+          </div>
+
+          <div>
+            <label className={labelClass}>Status Magang</label>
+            <select name="status_magang" value={form.status_magang} onChange={handleChange} className={inputClass}>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Aktif">Aktif</option>
+              <option value="Selesai">Selesai</option>
+            </select>
+          </div>
+
+          <div className="flex flex-wrap gap-3 pt-2 border-t border-glass-stroke">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 electric-gradient text-white px-6 py-2.5 rounded-xl text-label-md font-semibold active:scale-95 transition-all shadow-[0_0_20px_rgba(0,112,243,0.3)] hover:shadow-[0_0_30px_rgba(0,112,243,0.5)] disabled:opacity-60"
+            >
+              {loading ? 'Menyimpan...' : (
+                <>
+                  <span className="material-symbols-outlined text-lg">save</span>
+                  Simpan
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/mahasiswa')}
+              className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl border border-glass-stroke text-label-md text-on-surface-variant hover:bg-white/5 transition-all"
+            >
+              Batal
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
