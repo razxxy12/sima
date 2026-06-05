@@ -1,8 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const authController = require('../controllers/authController');
+const jwt = require('jsonwebtoken');
 
-router.post('/login', authController.login);
-router.post('/register', authController.register);
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-module.exports = router;
+  if (!token) return res.status(401).json({ message: 'Token tidak ditemukan.' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(403).json({ message: 'Token tidak valid atau kadaluarsa.' });
+  }
+};
+
+module.exports = { authenticate };
