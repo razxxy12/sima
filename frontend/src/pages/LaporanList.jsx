@@ -5,12 +5,6 @@ import { useAuth } from '../context/AuthContext';
 const MAX_FILE_SIZE_MB    = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-const fetchBlobUrl = async (filePath) => {
-  const filename = filePath.split('/').pop();
-  const response = await api.get(`/laporan/file/${filename}`, { responseType: 'blob' });
-  return URL.createObjectURL(response.data);
-};
-
 const statusBadge = (status) => {
   if (status === 'Approved') return 'bg-green-500/10 text-green-400 border-green-500/20';
   if (status === 'Pending')  return 'bg-electric-blue/10 text-electric-blue border-electric-blue/20';
@@ -18,14 +12,13 @@ const statusBadge = (status) => {
 };
 
 const LaporanList = () => {
-  const [laporan, setLaporan]         = useState([]);
-  const [judul, setJudul]             = useState('');
-  const [uploading, setUploading]     = useState(false);
-  const [fileError, setFileError]     = useState('');
-  const [preview, setPreview]         = useState(null);
-  const [loadingFile, setLoadingFile] = useState(false);
-  const { user }                      = useAuth();
-  const fileRef                       = useRef(null);
+  const [laporan, setLaporan]     = useState([]);
+  const [judul, setJudul]         = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [fileError, setFileError] = useState('');
+  const [preview, setPreview]     = useState(null); // { url, judul, ext }
+  const { user }                  = useAuth();
+  const fileRef                   = useRef(null);
 
   const fetchLaporan = async () => {
     try {
@@ -38,23 +31,13 @@ const LaporanList = () => {
 
   useEffect(() => { fetchLaporan(); }, []);
 
-  const closePreview = () => {
-    if (preview?.blobUrl) URL.revokeObjectURL(preview.blobUrl);
-    setPreview(null);
+  // File sekarang langsung URL Cloudinary — tidak perlu fetch blob
+  const handleLihat = (l) => {
+    const ext = l.file_pdf.split('.').pop().toLowerCase().split('?')[0];
+    setPreview({ url: l.file_pdf, judul: l.judul, ext });
   };
 
-  const handleLihat = async (l) => {
-    setLoadingFile(true);
-    try {
-      const blobUrl = await fetchBlobUrl(l.file_pdf);
-      const ext = l.file_pdf.split('.').pop().toLowerCase();
-      setPreview({ blobUrl, judul: l.judul, ext });
-    } catch {
-      alert('Gagal memuat file. Pastikan file masih tersedia.');
-    } finally {
-      setLoadingFile(false);
-    }
-  };
+  const closePreview = () => setPreview(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -106,32 +89,25 @@ const LaporanList = () => {
           Laporan Magang
         </h2>
         <p className="text-body-md text-on-surface-variant mt-1">
-          {user?.role === 'mahasiswa' ? 'Upload dan pantau status laporan magang kamu.' : 'Tinjau dan kelola semua laporan mahasiswa.'}
+          {user?.role === 'mahasiswa'
+            ? 'Upload dan pantau status laporan magang kamu.'
+            : 'Tinjau dan kelola semua laporan mahasiswa.'}
         </p>
       </div>
 
-      {/* Loading overlay */}
-      {loadingFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="glass-card rounded-2xl px-6 py-5 flex items-center gap-3">
-            <svg className="animate-spin h-5 w-5 text-electric-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-            </svg>
-            <span className="text-label-md text-on-surface">Memuat file...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Preview */}
+      {/* Modal Preview — buka langsung dari Cloudinary URL */}
       {preview && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/95">
           <div className="flex items-center justify-between px-4 py-3 bg-surface-container border-b border-glass-stroke flex-shrink-0">
-            <span className="text-label-md text-on-surface font-medium truncate max-w-[60%]">{preview.judul}</span>
+            <span className="text-label-md text-on-surface font-medium truncate max-w-[60%]">
+              {preview.judul}
+            </span>
             <div className="flex items-center gap-3">
               <a
-                href={preview.blobUrl}
-                download={preview.judul}
+                href={preview.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
                 className="inline-flex items-center gap-1 text-label-md electric-gradient text-white px-3 py-1.5 rounded-lg transition"
               >
                 <span className="material-symbols-outlined text-base">download</span>
@@ -145,16 +121,26 @@ const LaporanList = () => {
               </button>
             </div>
           </div>
+
           <div className="flex-1 overflow-hidden">
             {preview.ext === 'pdf' ? (
-              <iframe src={preview.blobUrl} className="w-full h-full border-0" title={preview.judul} />
+              <iframe
+                src={preview.url}
+                className="w-full h-full border-0"
+                title={preview.judul}
+              />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-on-surface gap-4">
+              /* DOCX: tampilkan tombol download karena browser tidak bisa render DOCX */
+              <div className="flex flex-col items-center justify-center h-full gap-4">
                 <span className="material-symbols-outlined text-6xl text-on-surface-variant">description</span>
-                <p className="text-body-md text-on-surface-variant">File DOCX tidak bisa ditampilkan langsung di browser.</p>
+                <p className="text-body-md text-on-surface-variant">
+                  File DOCX tidak bisa ditampilkan di browser.
+                </p>
                 <a
-                  href={preview.blobUrl}
-                  download={preview.judul}
+                  href={preview.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
                   className="inline-flex items-center gap-2 electric-gradient text-white px-5 py-2.5 rounded-xl text-label-md font-semibold"
                 >
                   <span className="material-symbols-outlined text-lg">download</span>

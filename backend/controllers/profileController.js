@@ -1,11 +1,9 @@
-const pool = require('../config/db');
-const bcrypt = require('bcryptjs');
-const fs = require('fs');
-const path = require('path');
+const pool       = require('../config/db');
+const bcrypt     = require('bcryptjs');
+const cloudinary = require('../config/cloudinary');
 
 exports.getProfile = async (req, res) => {
   try {
-    // Ambil data user saja (tanpa JOIN mahasiswa karena tabel mungkin tidak ada)
     const [rows] = await pool.query(
       'SELECT id, nama, email, role, foto, created_at FROM users WHERE id = ?',
       [req.user.id]
@@ -33,25 +31,36 @@ exports.uploadFoto = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'File foto tidak ditemukan' });
 
-    // Simpan hanya path relatif dari root backend, pakai forward slash
-    const filePath = req.file.path
-      .replace(/\\/g, '/')           // Windows backslash → forward slash
-      .replace(/^.*uploads\//, 'uploads/'); // buang prefix absolut, simpan dari 'uploads/'
+    // Hapus foto lama dari Cloudinary jika ada
+    const [rows] = await pool.query('SELECT foto FROM users WHERE id = ?', [req.user.id]);
+    const fotoLama = rows[0]?.foto;
+    if (fotoLama && fotoLama.includes('cloudinary')) {
+      // Extract public_id: ambil bagian setelah /upload/ lalu hapus extension
+      const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i);
+      if (match) {
+        await cloudinary.uploader.destroy(match[1]).catch(console.error);
+      }
+    }
 
-    await pool.query('UPDATE users SET foto = ? WHERE id = ?', [filePath, req.user.id]);
-    res.json({ message: 'Foto berhasil diupload', foto: filePath });
+    // req.file.path = Cloudinary secure_url
+    const fotoUrl = req.file.path;
+    await pool.query('UPDATE users SET foto = ? WHERE id = ?', [fotoUrl, req.user.id]);
+    res.json({ message: 'Foto berhasil diupload', foto: fotoUrl });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Gagal upload foto' });
   }
 };
+
 exports.deleteFoto = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT foto FROM users WHERE id = ?', [req.user.id]);
     const fotoLama = rows[0]?.foto;
-    if (fotoLama) {
-      const fullPath = path.join(__dirname, '..', fotoLama);
-      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    if (fotoLama && fotoLama.includes('cloudinary')) {
+      const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i);
+      if (match) {
+        await cloudinary.uploader.destroy(match[1]).catch(console.error);
+      }
     }
     await pool.query('UPDATE users SET foto = NULL WHERE id = ?', [req.user.id]);
     res.json({ message: 'Foto dihapus' });
@@ -66,7 +75,7 @@ exports.changePassword = async (req, res) => {
     const { oldPassword, newPassword } = req.body;
     if (!oldPassword || !newPassword)
       return res.status(400).json({ message: 'Password lama dan baru wajib diisi' });
-    const [rows] = await pool.query('SELECT password FROM users WHERE id = ?', [req.user.id]);
+    const [rows]  = await pool.query('SELECT password FROM users WHERE id = ?', [req.user.id]);
     const isMatch = await bcrypt.compare(oldPassword, rows[0].password);
     if (!isMatch) return res.status(400).json({ message: 'Password lama salah' });
     const hashed = await bcrypt.hash(newPassword, 10);
