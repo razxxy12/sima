@@ -36,7 +36,7 @@ const Register = () => {
       <div className="ambient-glow-bg" />
 
       {/* Main */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-12">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="text-center mb-8 space-y-1">
           <h1 className="text-headline-lg font-bold text-on-surface tracking-tight">Buat Akun</h1>
           <p className="text-body-md text-on-surface-variant">Daftar sebagai mahasiswa magang</p>
