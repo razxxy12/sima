@@ -1,5 +1,6 @@
-const pool       = require('../config/db');
-const cloudinary = require('../config/cloudinary');
+const pool                              = require('../config/db');
+const cloudinary                        = require('../config/cloudinary');
+const { uploadToCloudinary }            = require('../middleware/upload');
 
 exports.getAll = async (req, res) => {
   try {
@@ -38,12 +39,19 @@ exports.upload = async (req, res) => {
     if (mhs.length === 0)
       return res.status(400).json({ message: 'Profil mahasiswa tidak ditemukan' });
 
-    // req.file.path berisi Cloudinary URL (secure_url)
-    const fileUrl = req.file.path;
+    const ext = req.file.originalname.split('.').pop().toLowerCase();
+
+    // Upload buffer ke Cloudinary sebagai raw file
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder:        'sima/laporan',
+      resource_type: 'raw',
+      format:        ext,
+      public_id:     `${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+    });
 
     await pool.query(
       'INSERT INTO laporan (mahasiswa_id, judul, file_pdf) VALUES (?, ?, ?)',
-      [mhs[0].id, judul, fileUrl]
+      [mhs[0].id, judul, result.secure_url]
     );
     res.status(201).json({ message: 'Laporan berhasil diupload' });
   } catch (error) {
@@ -66,7 +74,6 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// Delete laporan + hapus file dari Cloudinary
 exports.delete = async (req, res) => {
   try {
     const { id } = req.params;
@@ -74,13 +81,14 @@ exports.delete = async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ message: 'Laporan tidak ditemukan' });
 
     const fileUrl = rows[0].file_pdf;
-    if (fileUrl) {
-      // Extract public_id dari URL Cloudinary
-      const parts    = fileUrl.split('/');
-      const filename = parts[parts.length - 1].split('.')[0];
-      const folder   = parts[parts.length - 2];
-      const publicId = `${folder}/${filename}`;
-      await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' }).catch(console.error);
+    if (fileUrl && fileUrl.includes('cloudinary')) {
+      // Extract public_id dari URL: ambil path setelah /upload/v.../
+      const match = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+)$/);
+      if (match) {
+        const publicIdWithExt = match[1];
+        const publicId = publicIdWithExt.replace(/\.[^/.]+$/, '');
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' }).catch(console.error);
+      }
     }
 
     await pool.query('DELETE FROM laporan WHERE id = ?', [id]);

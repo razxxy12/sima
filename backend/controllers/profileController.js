@@ -1,6 +1,7 @@
-const pool       = require('../config/db');
-const bcrypt     = require('bcryptjs');
-const cloudinary = require('../config/cloudinary');
+const pool                   = require('../config/db');
+const bcrypt                 = require('bcryptjs');
+const cloudinary             = require('../config/cloudinary');
+const { uploadToCloudinary } = require('../middleware/upload');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -18,7 +19,7 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { nama, no_hp } = req.body;
+    const { nama } = req.body;
     await pool.query('UPDATE users SET nama = ? WHERE id = ?', [nama, req.user.id]);
     res.json({ message: 'Profil diperbarui' });
   } catch (error) {
@@ -35,17 +36,21 @@ exports.uploadFoto = async (req, res) => {
     const [rows] = await pool.query('SELECT foto FROM users WHERE id = ?', [req.user.id]);
     const fotoLama = rows[0]?.foto;
     if (fotoLama && fotoLama.includes('cloudinary')) {
-      // Extract public_id: ambil bagian setelah /upload/ lalu hapus extension
-      const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i);
+      const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
       if (match) {
         await cloudinary.uploader.destroy(match[1]).catch(console.error);
       }
     }
 
-    // req.file.path = Cloudinary secure_url
-    const fotoUrl = req.file.path;
-    await pool.query('UPDATE users SET foto = ? WHERE id = ?', [fotoUrl, req.user.id]);
-    res.json({ message: 'Foto berhasil diupload', foto: fotoUrl });
+    // Upload foto baru ke Cloudinary
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder:          'sima/foto',
+      resource_type:   'image',
+      transformation:  [{ width: 400, height: 400, crop: 'fill' }],
+    });
+
+    await pool.query('UPDATE users SET foto = ? WHERE id = ?', [result.secure_url, req.user.id]);
+    res.json({ message: 'Foto berhasil diupload', foto: result.secure_url });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Gagal upload foto' });
@@ -57,7 +62,7 @@ exports.deleteFoto = async (req, res) => {
     const [rows] = await pool.query('SELECT foto FROM users WHERE id = ?', [req.user.id]);
     const fotoLama = rows[0]?.foto;
     if (fotoLama && fotoLama.includes('cloudinary')) {
-      const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i);
+      const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
       if (match) {
         await cloudinary.uploader.destroy(match[1]).catch(console.error);
       }
