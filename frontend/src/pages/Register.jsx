@@ -35,13 +35,6 @@ const Register = () => {
       {/* Ambient glow */}
       <div className="ambient-glow-bg" />
 
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-glass-fill backdrop-blur-lg border-b border-glass-stroke flex justify-between items-center h-16 px-4 shadow-[0_8px_32px_0_rgba(0,112,243,0.1)]">
-        <div className="w-11 h-11" />
-        <span className="text-headline-md font-bold text-primary tracking-tighter">SIMA</span>
-        <div className="w-11 h-11" />
-      </header>
-
       {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-12">
         <div className="text-center mb-8 space-y-1">
