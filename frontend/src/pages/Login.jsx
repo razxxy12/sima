@@ -30,8 +30,15 @@ const Login = () => {
       {/* Ambient background glow */}
       <div className="ambient-glow-bg" />
 
+      {/* TopAppBar */}
+      <header className="fixed top-0 w-full z-50 bg-glass-fill backdrop-blur-lg border-b border-glass-stroke flex justify-between items-center h-16 px-4 shadow-[0_8px_32px_0_rgba(0,112,243,0.1)]">
+        <div className="w-11 h-11" />
+        <span className="text-headline-md font-bold text-primary tracking-tighter">SIMA</span>
+        <div className="w-11 h-11" />
+      </header>
+
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-16 pb-24">
         {/* Logo */}
         <div className="text-center mb-10 space-y-2">
           <h1 className="text-headline-xl font-bold text-primary tracking-tight">SIMA</h1>
@@ -127,6 +134,13 @@ const Login = () => {
               </Link>
             </p>
           </div>
+        </div>
+
+        {/* Decorative */}
+        <div className="mt-12 opacity-30 flex gap-4">
+          <div className="w-12 h-1 bg-electric-blue rounded-full" />
+          <div className="w-12 h-1 bg-glass-stroke rounded-full" />
+          <div className="w-12 h-1 bg-glass-stroke rounded-full" />
         </div>
       </main>
     </div>

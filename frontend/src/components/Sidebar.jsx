@@ -37,7 +37,7 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Hamburger button — mobile only */}
+      {/* Hamburger — mobile only */}
       <button
         onClick={openSidebar}
         className="md:hidden fixed top-0 left-0 z-50 h-16 w-16 flex items-center justify-center text-primary hover:bg-white/5 transition-colors"
@@ -58,15 +58,18 @@ const Sidebar = () => {
       {/* Sidebar Panel */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen w-64 flex flex-col z-50
-          transition-transform duration-300 ease-in-out
+          fixed top-0 left-0 z-50
+          flex flex-col
+          w-72 md:w-64
           glass-card border-r border-glass-stroke rounded-none
+          transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:relative md:translate-x-0 md:flex md:flex-shrink-0
         `}
+        style={{ height: '100dvh' }}
       >
         {/* Header */}
-        <div className="p-5 border-b border-glass-stroke flex items-center justify-between">
+        <div className="flex-shrink-0 p-5 border-b border-glass-stroke flex items-center justify-between">
           <div>
             <h1 className="text-headline-md font-bold text-electric-blue tracking-tighter">SIMA</h1>
             <p className="text-label-sm text-on-surface-variant mt-0.5">Internship Management</p>
@@ -80,15 +83,15 @@ const Sidebar = () => {
           </button>
         </div>
 
-        {/* Nav Links */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {/* Nav Links — scrollable jika banyak menu */}
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
           {links.map(link => (
             <NavLink
               key={link.to}
               to={link.to}
               end={link.to === '/'}
               className={({ isActive }) =>
-                `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-label-md font-medium transition-all duration-200 ${
+                `relative flex items-center gap-3 px-3 py-3 rounded-xl text-label-md font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/20'
                     : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'
@@ -108,11 +111,11 @@ const Sidebar = () => {
           ))}
         </nav>
 
-        {/* Logout */}
-        <div className="p-3 border-t border-glass-stroke">
+        {/* Logout — selalu terlihat di bagian bawah */}
+        <div className="flex-shrink-0 p-3 border-t border-glass-stroke">
           <button
             onClick={logout}
-            className="flex items-center gap-2 w-full px-3 py-2.5 text-label-md text-on-surface-variant hover:text-error hover:bg-error/5 rounded-xl transition-all duration-200"
+            className="flex items-center gap-2 w-full px-3 py-3 text-label-md text-on-surface-variant hover:text-error hover:bg-error/5 rounded-xl transition-all duration-200"
           >
             <span className="material-symbols-outlined text-xl">logout</span>
             Sign Out
