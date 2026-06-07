@@ -33,7 +33,7 @@ const Register = () => {
     <div className="min-h-screen bg-bg-deep text-on-background overflow-y-auto">
       <div className="ambient-glow-bg" />
 
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
         {/* Logo */}
         <div className="text-center mb-6">
           <h1 className="text-headline-lg font-bold text-on-surface tracking-tight">Buat Akun</h1>
