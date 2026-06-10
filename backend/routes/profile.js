@@ -1,7 +1,7 @@
-const express        = require('express');
-const router         = express.Router();
-const multer         = require('multer');
-const { uploadFoto, uploadToCloudinary } = require('../middleware/upload');
+const express           = require('express');
+const router            = express.Router();
+const multer            = require('multer');
+const { uploadFoto }    = require('../middleware/upload');
 const profileController = require('../controllers/profileController');
 const { authenticate: auth } = require('../middleware/auth');
 
@@ -18,8 +18,10 @@ const uploadFotoMiddleware = (req, res, next) => {
   });
 };
 
-router.get('/',          auth, profileController.getProfile);
-router.put('/',          auth, profileController.updateProfile);
-router.post('/foto',     auth, uploadFotoMiddleware, profileController.uploadFoto);
-router.delete('/foto',   auth, profileController.deleteFoto);
-router.put('/password',  aut
+router.get('/',         auth, profileController.getProfile);
+router.put('/',         auth, profileController.updateProfile);
+router.post('/foto',    auth, uploadFotoMiddleware, profileController.uploadFoto);
+router.delete('/foto',  auth, profileController.deleteFoto);
+router.put('/password', auth, profileController.changePassword);
+
+module.exports = router;
