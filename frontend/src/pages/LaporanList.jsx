@@ -2,14 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
-const MAX_FILE_SIZE_MB    = 5;
+const MAX_FILE_SIZE_MB    = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-
-const fetchBlobUrl = async (filePath) => {
-  const filename = filePath.split('/').pop();
-  const response = await api.get(`/laporan/file/${filename}`, { responseType: 'blob' });
-  return URL.createObjectURL(response.data);
-};
 
 const statusBadge = (status) => {
   if (status === 'Approved') return 'bg-green-500/10 text-green-400 border-green-500/20';
@@ -23,7 +17,6 @@ const LaporanList = () => {
   const [uploading, setUploading]     = useState(false);
   const [fileError, setFileError]     = useState('');
   const [preview, setPreview]         = useState(null);
-  const [loadingFile, setLoadingFile] = useState(false);
   const { user }                      = useAuth();
   const fileRef                       = useRef(null);
 
@@ -38,22 +31,12 @@ const LaporanList = () => {
 
   useEffect(() => { fetchLaporan(); }, []);
 
-  const closePreview = () => {
-    if (preview?.blobUrl) URL.revokeObjectURL(preview.blobUrl);
-    setPreview(null);
-  };
+  const closePreview = () => setPreview(null);
 
-  const handleLihat = async (l) => {
-    setLoadingFile(true);
-    try {
-      const blobUrl = await fetchBlobUrl(l.file_pdf);
-      const ext = l.file_pdf.split('.').pop().toLowerCase();
-      setPreview({ blobUrl, judul: l.judul, ext });
-    } catch {
-      alert('Gagal memuat file. Pastikan file masih tersedia.');
-    } finally {
-      setLoadingFile(false);
-    }
+  // ✅ Langsung pakai Cloudinary URL dari DB, tidak perlu fetch blob
+  const handleLihat = (l) => {
+    const ext = l.file_pdf.split('.').pop().toLowerCase().split('?')[0];
+    setPreview({ url: l.file_pdf, judul: l.judul, ext });
   };
 
   const handleFileChange = (e) => {
@@ -70,14 +53,17 @@ const LaporanList = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
     const file = fileRef.current?.files[0];
-    if (!file || !judul) return alert('Judul dan file wajib diisi');
+    if (!file)  return alert('File wajib dipilih');
+    if (!judul) return alert('Judul wajib diisi');
     if (file.size > MAX_FILE_SIZE_BYTES) return alert(`Ukuran file maksimal ${MAX_FILE_SIZE_MB} MB`);
     const formData = new FormData();
     formData.append('judul', judul);
-    formData.append('file', file);
+    formData.append('file', file); // ✅ sesuai uploadLaporan.single('file') di routes
     setUploading(true);
     try {
-      await api.post('/laporan/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post('/laporan/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       setJudul('');
       setFileError('');
       if (fileRef.current) fileRef.current.value = '';
@@ -98,6 +84,16 @@ const LaporanList = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Yakin ingin menghapus laporan ini?')) return;
+    try {
+      await api.delete(`/laporan/${id}`);
+      fetchLaporan();
+    } catch {
+      alert('Gagal menghapus laporan');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -106,32 +102,25 @@ const LaporanList = () => {
           Laporan Magang
         </h2>
         <p className="text-body-md text-on-surface-variant mt-1">
-          {user?.role === 'mahasiswa' ? 'Upload dan pantau status laporan magang kamu.' : 'Tinjau dan kelola semua laporan mahasiswa.'}
+          {user?.role === 'mahasiswa'
+            ? 'Upload dan pantau status laporan magang kamu.'
+            : 'Tinjau dan kelola semua laporan mahasiswa.'}
         </p>
       </div>
-
-      {/* Loading overlay */}
-      {loadingFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="glass-card rounded-2xl px-6 py-5 flex items-center gap-3">
-            <svg className="animate-spin h-5 w-5 text-electric-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-            </svg>
-            <span className="text-label-md text-on-surface">Memuat file...</span>
-          </div>
-        </div>
-      )}
 
       {/* Modal Preview */}
       {preview && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/95">
           <div className="flex items-center justify-between px-4 py-3 bg-surface-container border-b border-glass-stroke flex-shrink-0">
-            <span className="text-label-md text-on-surface font-medium truncate max-w-[60%]">{preview.judul}</span>
+            <span className="text-label-md text-on-surface font-medium truncate max-w-[60%]">
+              {preview.judul}
+            </span>
             <div className="flex items-center gap-3">
-              <a
-                href={preview.blobUrl}
-                download={preview.judul}
+              
+                href={preview.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
                 className="inline-flex items-center gap-1 text-label-md electric-gradient text-white px-3 py-1.5 rounded-lg transition"
               >
                 <span className="material-symbols-outlined text-base">download</span>
@@ -147,14 +136,25 @@ const LaporanList = () => {
           </div>
           <div className="flex-1 overflow-hidden">
             {preview.ext === 'pdf' ? (
-              <iframe src={preview.blobUrl} className="w-full h-full border-0" title={preview.judul} />
+              // ✅ Langsung embed Cloudinary URL ke iframe
+              <iframe
+                src={preview.url}
+                className="w-full h-full border-0"
+                title={preview.judul}
+              />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-on-surface gap-4">
-                <span className="material-symbols-outlined text-6xl text-on-surface-variant">description</span>
-                <p className="text-body-md text-on-surface-variant">File DOCX tidak bisa ditampilkan langsung di browser.</p>
-                <a
-                  href={preview.blobUrl}
-                  download={preview.judul}
+                <span className="material-symbols-outlined text-6xl text-on-surface-variant">
+                  description
+                </span>
+                <p className="text-body-md text-on-surface-variant">
+                  File DOCX tidak bisa ditampilkan langsung di browser.
+                </p>
+                
+                  href={preview.url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 electric-gradient text-white px-5 py-2.5 rounded-xl text-label-md font-semibold"
                 >
                   <span className="material-symbols-outlined text-lg">download</span>
@@ -172,7 +172,9 @@ const LaporanList = () => {
           <h3 className="text-headline-md font-semibold text-on-surface mb-5">Upload Laporan Baru</h3>
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
-              <label className="block text-label-md text-on-surface-variant mb-1.5">Judul Laporan</label>
+              <label className="block text-label-md text-on-surface-variant mb-1.5">
+                Judul Laporan
+              </label>
               <input
                 type="text"
                 placeholder="Masukkan judul laporan"
@@ -186,17 +188,25 @@ const LaporanList = () => {
             <div>
               <label className="block text-label-md text-on-surface-variant mb-1.5">
                 File Laporan
-                <span className="ml-2 text-label-sm text-outline font-normal">Maks. {MAX_FILE_SIZE_MB} MB</span>
+                <span className="ml-2 text-label-sm text-outline font-normal">
+                  Maks. {MAX_FILE_SIZE_MB} MB
+                </span>
               </label>
-              <label className={`file-drop-zone flex flex-col items-center justify-center gap-2 p-6 rounded-xl cursor-pointer hover:bg-white/5 transition-all ${fileError ? 'ring-2 ring-error' : ''}`}>
+              <label
+                className={`file-drop-zone flex flex-col items-center justify-center gap-2 p-6 rounded-xl cursor-pointer hover:bg-white/5 transition-all ${fileError ? 'ring-2 ring-error' : ''}`}
+              >
                 <span className="material-symbols-outlined text-3xl text-outline">cloud_upload</span>
-                <span className="text-label-md text-on-surface-variant">Klik untuk pilih file PDF atau DOCX</span>
-                <span className="text-label-sm text-outline">Format: PDF, DOCX · Maks. {MAX_FILE_SIZE_MB} MB</span>
+                <span className="text-label-md text-on-surface-variant">
+                  {fileRef.current?.files[0]?.name || 'Klik untuk pilih file PDF atau DOCX'}
+                </span>
+                <span className="text-label-sm text-outline">
+                  Format: PDF, DOCX · Maks. {MAX_FILE_SIZE_MB} MB
+                </span>
+                {/* ✅ Hapus required dari input hidden — validasi manual di handleUpload */}
                 <input
                   type="file"
                   accept=".pdf,.docx"
                   ref={fileRef}
-                  required
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -243,7 +253,10 @@ const LaporanList = () => {
             <thead>
               <tr className="bg-surface-container-low">
                 {['Mahasiswa', 'Judul', 'Tanggal', 'Status', 'Aksi'].map((h) => (
-                  <th key={h} className="px-4 md:px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider whitespace-nowrap">
+                  <th
+                    key={h}
+                    className="px-4 md:px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider whitespace-nowrap"
+                  >
                     {h}
                   </th>
                 ))}
@@ -259,13 +272,19 @@ const LaporanList = () => {
               ) : (
                 laporan.map((l) => (
                   <tr key={l.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-body-md text-on-surface whitespace-nowrap">{l.nama_mahasiswa}</td>
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-body-md text-on-surface max-w-[200px] truncate">{l.judul}</td>
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-body-md text-on-surface whitespace-nowrap">
+                      {l.nama_mahasiswa}
+                    </td>
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-body-md text-on-surface max-w-[200px] truncate">
+                      {l.judul}
+                    </td>
                     <td className="px-4 md:px-6 py-3 md:py-4 text-body-md text-on-surface-variant whitespace-nowrap">
                       {new Date(l.tanggal_upload).toLocaleDateString('id-ID')}
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                      <span className={`px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusBadge(l.status)}`}>
+                      <span
+                        className={`px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusBadge(l.status)}`}
+                      >
                         {l.status}
                       </span>
                     </td>
@@ -294,6 +313,14 @@ const LaporanList = () => {
                               Tolak
                             </button>
                           </>
+                        )}
+                        {(user?.role === 'admin' || user?.role === 'mahasiswa') && (
+                          <button
+                            onClick={() => handleDelete(l.id)}
+                            className="text-error hover:text-red-300 text-label-md font-medium transition-colors"
+                          >
+                            Hapus
+                          </button>
                         )}
                       </div>
                     </td>
