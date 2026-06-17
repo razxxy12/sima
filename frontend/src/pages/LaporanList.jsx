@@ -12,13 +12,13 @@ const statusBadge = (status) => {
 };
 
 const LaporanList = () => {
-  const [laporan, setLaporan]         = useState([]);
-  const [judul, setJudul]             = useState('');
-  const [uploading, setUploading]     = useState(false);
-  const [fileError, setFileError]     = useState('');
-  const [preview, setPreview]         = useState(null);
-  const { user }                      = useAuth();
-  const fileRef                       = useRef(null);
+  const [laporan, setLaporan]     = useState([]);
+  const [judul, setJudul]         = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [fileError, setFileError] = useState('');
+  const [preview, setPreview]     = useState(null);
+  const { user }                  = useAuth();
+  const fileRef                   = useRef(null);
 
   const fetchLaporan = async () => {
     try {
@@ -29,11 +29,12 @@ const LaporanList = () => {
     }
   };
 
-  useEffect(() => { fetchLaporan(); }, []);
+  useEffect(() => {
+    fetchLaporan();
+  }, []);
 
   const closePreview = () => setPreview(null);
 
-  // ✅ Langsung pakai Cloudinary URL dari DB, tidak perlu fetch blob
   const handleLihat = (l) => {
     const ext = l.file_pdf.split('.').pop().toLowerCase().split('?')[0];
     setPreview({ url: l.file_pdf, judul: l.judul, ext });
@@ -41,9 +42,14 @@ const LaporanList = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (!file) return setFileError('');
+    if (!file) {
+      setFileError('');
+      return;
+    }
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      setFileError(`Ukuran file maksimal ${MAX_FILE_SIZE_MB} MB. File kamu: ${(file.size / 1024 / 1024).toFixed(1)} MB`);
+      setFileError(
+        `Ukuran file maksimal ${MAX_FILE_SIZE_MB} MB. File kamu: ${(file.size / 1024 / 1024).toFixed(1)} MB`
+      );
       e.target.value = '';
     } else {
       setFileError('');
@@ -53,12 +59,23 @@ const LaporanList = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
     const file = fileRef.current?.files[0];
-    if (!file)  return alert('File wajib dipilih');
-    if (!judul) return alert('Judul wajib diisi');
-    if (file.size > MAX_FILE_SIZE_BYTES) return alert(`Ukuran file maksimal ${MAX_FILE_SIZE_MB} MB`);
+    if (!file) {
+      alert('File wajib dipilih');
+      return;
+    }
+    if (!judul) {
+      alert('Judul wajib diisi');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      alert(`Ukuran file maksimal ${MAX_FILE_SIZE_MB} MB`);
+      return;
+    }
+
     const formData = new FormData();
     formData.append('judul', judul);
-    formData.append('file', file); // ✅ sesuai uploadLaporan.single('file') di routes
+    formData.append('file', file);
+
     setUploading(true);
     try {
       await api.post('/laporan/upload', formData, {
@@ -96,7 +113,6 @@ const LaporanList = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h2 className="text-headline-lg-mobile md:text-headline-lg font-semibold text-on-surface">
           Laporan Magang
@@ -108,7 +124,6 @@ const LaporanList = () => {
         </p>
       </div>
 
-      {/* Modal Preview */}
       {preview && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/95">
           <div className="flex items-center justify-between px-4 py-3 bg-surface-container border-b border-glass-stroke flex-shrink-0">
@@ -116,7 +131,7 @@ const LaporanList = () => {
               {preview.judul}
             </span>
             <div className="flex items-center gap-3">
-              
+              <a
                 href={preview.url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -124,7 +139,7 @@ const LaporanList = () => {
                 className="inline-flex items-center gap-1 text-label-md electric-gradient text-white px-3 py-1.5 rounded-lg transition"
               >
                 <span className="material-symbols-outlined text-base">download</span>
-                Download
+                <span>Download</span>
               </a>
               <button
                 onClick={closePreview}
@@ -136,7 +151,6 @@ const LaporanList = () => {
           </div>
           <div className="flex-1 overflow-hidden">
             {preview.ext === 'pdf' ? (
-              // ✅ Langsung embed Cloudinary URL ke iframe
               <iframe
                 src={preview.url}
                 className="w-full h-full border-0"
@@ -150,7 +164,7 @@ const LaporanList = () => {
                 <p className="text-body-md text-on-surface-variant">
                   File DOCX tidak bisa ditampilkan langsung di browser.
                 </p>
-                
+                <a
                   href={preview.url}
                   download
                   target="_blank"
@@ -158,7 +172,7 @@ const LaporanList = () => {
                   className="inline-flex items-center gap-2 electric-gradient text-white px-5 py-2.5 rounded-xl text-label-md font-semibold"
                 >
                   <span className="material-symbols-outlined text-lg">download</span>
-                  Download File
+                  <span>Download File</span>
                 </a>
               </div>
             )}
@@ -166,7 +180,6 @@ const LaporanList = () => {
         </div>
       )}
 
-      {/* Upload Form (mahasiswa only) */}
       {user?.role === 'mahasiswa' && (
         <div className="glass-card rounded-xl p-6">
           <h3 className="text-headline-md font-semibold text-on-surface mb-5">Upload Laporan Baru</h3>
@@ -193,16 +206,17 @@ const LaporanList = () => {
                 </span>
               </label>
               <label
-                className={`file-drop-zone flex flex-col items-center justify-center gap-2 p-6 rounded-xl cursor-pointer hover:bg-white/5 transition-all ${fileError ? 'ring-2 ring-error' : ''}`}
+                className={`file-drop-zone flex flex-col items-center justify-center gap-2 p-6 rounded-xl cursor-pointer hover:bg-white/5 transition-all ${
+                  fileError ? 'ring-2 ring-error' : ''
+                }`}
               >
                 <span className="material-symbols-outlined text-3xl text-outline">cloud_upload</span>
                 <span className="text-label-md text-on-surface-variant">
-                  {fileRef.current?.files[0]?.name || 'Klik untuk pilih file PDF atau DOCX'}
+                  Klik untuk pilih file PDF atau DOCX
                 </span>
                 <span className="text-label-sm text-outline">
                   Format: PDF, DOCX · Maks. {MAX_FILE_SIZE_MB} MB
                 </span>
-                {/* ✅ Hapus required dari input hidden — validasi manual di handleUpload */}
                 <input
                   type="file"
                   accept=".pdf,.docx"
@@ -226,16 +240,21 @@ const LaporanList = () => {
             >
               {uploading ? (
                 <>
-                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                  <svg
+                    className="animate-spin h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
-                  Mengunggah...
+                  <span>Mengunggah...</span>
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-lg">upload_file</span>
-                  Upload Laporan
+                  <span>Upload Laporan</span>
                 </>
               )}
             </button>
@@ -243,7 +262,6 @@ const LaporanList = () => {
         </div>
       )}
 
-      {/* Table */}
       <div className="glass-card rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-glass-stroke">
           <h3 className="text-headline-md font-semibold text-on-surface">Daftar Laporan</h3>
@@ -283,7 +301,9 @@ const LaporanList = () => {
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4 whitespace-nowrap">
                       <span
-                        className={`px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusBadge(l.status)}`}
+                        className={`px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusBadge(
+                          l.status
+                        )}`}
                       >
                         {l.status}
                       </span>
