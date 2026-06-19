@@ -1,9 +1,9 @@
 const express  = require('express');
 const router   = express.Router();
 const multer   = require('multer');
-const { uploadLaporan }    = require('../middleware/upload');
-const laporanController    = require('../controllers/laporanController');
-const { authenticate: auth } = require('../middleware/auth');
+const { uploadLaporan }              = require('../middleware/upload');
+const laporanController              = require('../controllers/laporanController');
+const { authenticate: auth, requireAktif } = require('../middleware/auth');
 
 const uploadMiddleware = (req, res, next) => {
   uploadLaporan.single('file')(req, res, (err) => {
@@ -17,13 +17,9 @@ const uploadMiddleware = (req, res, next) => {
   });
 };
 
-router.get('/',              auth, laporanController.getAll);
-router.post('/upload',       auth, uploadMiddleware, laporanController.upload);
-router.put('/:id/status',    auth, laporanController.updateStatus);
-router.delete('/:id',        auth, laporanController.delete);
-
-// ── CATATAN: Route /file/:filename dihapus ───────────────────
-// File kini langsung diakses lewat Cloudinary URL (disimpan di DB).
-// Frontend tinggal buka URL tersebut langsung, tidak perlu proxy lagi.
+router.get('/',           auth,                        laporanController.getAll);
+router.post('/upload',    auth, requireAktif, uploadMiddleware, laporanController.upload);
+router.put('/:id/status', auth,                        laporanController.updateStatus);
+router.delete('/:id',     auth,                        laporanController.delete);
 
 module.exports = router;
