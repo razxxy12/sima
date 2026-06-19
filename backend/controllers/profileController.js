@@ -6,7 +6,11 @@ const { uploadToCloudinary } = require('../middleware/upload');
 exports.getProfile = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, nama, email, role, foto, created_at FROM users WHERE id = ?',
+      `SELECT u.id, u.nama, u.email, u.role, u.foto, u.created_at,
+              m.nim, m.no_hp, m.prodi, m.angkatan
+       FROM users u
+       LEFT JOIN mahasiswa m ON m.user_id = u.id
+       WHERE u.id = ?`,
       [req.user.id]
     );
     if (rows.length === 0) return res.status(404).json({ message: 'User tidak ditemukan' });
@@ -19,8 +23,20 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { nama } = req.body;
+    const { nama, no_hp, prodi, angkatan } = req.body;
+
+    // Update nama di tabel users
     await pool.query('UPDATE users SET nama = ? WHERE id = ?', [nama, req.user.id]);
+
+    // Update data mahasiswa jika ada
+    const [mhs] = await pool.query('SELECT id FROM mahasiswa WHERE user_id = ?', [req.user.id]);
+    if (mhs.length > 0) {
+      await pool.query(
+        'UPDATE mahasiswa SET no_hp = ?, prodi = ?, angkatan = ? WHERE user_id = ?',
+        [no_hp || null, prodi || null, angkatan || null, req.user.id]
+      );
+    }
+
     res.json({ message: 'Profil diperbarui' });
   } catch (error) {
     console.error(error);
@@ -31,24 +47,17 @@ exports.updateProfile = async (req, res) => {
 exports.uploadFoto = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'File foto tidak ditemukan' });
-
-    // Hapus foto lama dari Cloudinary jika ada
     const [rows] = await pool.query('SELECT foto FROM users WHERE id = ?', [req.user.id]);
     const fotoLama = rows[0]?.foto;
     if (fotoLama && fotoLama.includes('cloudinary')) {
       const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
-      if (match) {
-        await cloudinary.uploader.destroy(match[1]).catch(console.error);
-      }
+      if (match) await cloudinary.uploader.destroy(match[1]).catch(console.error);
     }
-
-    // Upload foto baru ke Cloudinary
     const result = await uploadToCloudinary(req.file.buffer, {
-      folder:          'sima/foto',
-      resource_type:   'image',
-      transformation:  [{ width: 400, height: 400, crop: 'fill' }],
+      folder:         'sima/foto',
+      resource_type:  'image',
+      transformation: [{ width: 400, height: 400, crop: 'fill' }],
     });
-
     await pool.query('UPDATE users SET foto = ? WHERE id = ?', [result.secure_url, req.user.id]);
     res.json({ message: 'Foto berhasil diupload', foto: result.secure_url });
   } catch (error) {
@@ -63,9 +72,7 @@ exports.deleteFoto = async (req, res) => {
     const fotoLama = rows[0]?.foto;
     if (fotoLama && fotoLama.includes('cloudinary')) {
       const match = fotoLama.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
-      if (match) {
-        await cloudinary.uploader.destroy(match[1]).catch(console.error);
-      }
+      if (match) await cloudinary.uploader.destroy(match[1]).catch(console.error);
     }
     await pool.query('UPDATE users SET foto = NULL WHERE id = ?', [req.user.id]);
     res.json({ message: 'Foto dihapus' });
