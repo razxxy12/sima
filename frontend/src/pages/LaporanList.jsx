@@ -182,7 +182,7 @@ const LaporanList = () => {
 
       {user?.role === 'mahasiswa' && (
         <div className="glass-card rounded-xl p-6">
-          <h3 className="text-headline-md font-semibold text-on-surface mb-5">Upload Laporan Baru</h3>
+          <h3 className="text-headline-md font-semibold text-on-surface mb-3">Upload Laporan Baru</h3> <div className="flex items-start gap-2 mb-5 px-3 py-2.5 rounded-lg bg-electric-blue/10 border border-electric-blue/20">   <span className="material-symbols-outlined text-electric-blue text-base mt-0.5 flex-shrink-0">info</span>   <p className="text-label-sm text-electric-blue">     <span className="font-semibold">Catatan:</span> Hanya mahasiswa yang sedang <span className="font-semibold">aktif magang</span> yang dapat mengupload file laporan.   </p> </div>
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
               <label className="block text-label-md text-on-surface-variant mb-1.5">
